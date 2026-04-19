@@ -21,18 +21,17 @@ def index():
         if not result:
             result = "No matching disease found."
     return render_template('index.html', result=result, precautions=precautions)
-
-@app.route('/download_pdf/<disease>')
+ @app.route('/download_pdf/<disease>')
 def download_pdf(disease):
     try:
-        # डेटा सुरक्षित तरीके से निकालें
-        info = disease_data.get(disease, {"precautions": ["Consult a doctor for advice."]})
-        precautions = info.get('precautions', ["Consult a doctor for advice."])
+        # डेटा निकालें
+        info = disease_data.get(disease, {"precautions": ["Consult a doctor."]})
+        precautions = info.get('precautions', ["Consult a doctor."])
 
         pdf = FPDF()
         pdf.add_page()
         
-        # --- Header ---
+        # --- Blue Header ---
         pdf.set_fill_color(0, 51, 102) 
         pdf.rect(0, 0, 210, 40, 'F')
         pdf.set_text_color(255, 255, 255) 
@@ -41,30 +40,37 @@ def download_pdf(disease):
         
         pdf.ln(25) 
 
-        # --- Content ---
+        # --- Diagnosis ---
         pdf.set_text_color(0, 0, 0) 
         pdf.set_font("Arial", 'B', 16)
-        pdf.cell(190, 10, txt="Medical Report Summary", ln=True)
+        pdf.cell(190, 10, txt="MEDICAL REPORT SUMMARY", ln=True, border='B')
+        pdf.ln(5)
         pdf.set_font("Arial", size=12)
-        pdf.cell(190, 10, txt=f"Condition Identified: {disease}", ln=True)
+        # सुरक्षित टेक्स्ट क्लीनिंग
+        clean_disease = str(disease).encode('ascii', 'ignore').decode('ascii')
+        pdf.cell(190, 10, txt=f"Identified Condition: {clean_disease}", ln=True)
         
         pdf.ln(10)
         pdf.set_font("Arial", 'B', 14)
-        pdf.cell(190, 10, txt="Recommended Steps:", ln=True)
+        pdf.cell(190, 10, txt="Recommended Precautions:", ln=True)
         
+        # --- Precautions List ---
         pdf.set_font("Arial", size=11)
         for p in precautions:
-            # बिना किसी स्पेशल करैक्टर के टेक्स्ट लिखें ताकि एरर न आए
-            text = str(p).encode('latin-1', 'replace').decode('latin-1')
-            pdf.multi_cell(180, 8, txt=f"- {text}")
+            # यह लाइन किसी भी खराब अक्षर को हटा देगी (Force ASCII)
+            clean_text = str(p).encode('ascii', 'ignore').decode('ascii')
+            pdf.multi_cell(180, 8, txt=f"- {clean_text}")
+            pdf.ln(1)
 
-        # --- Save ---
+        # --- PDF Output ---
         temp_file = os.path.join(tempfile.gettempdir(), "health_report.pdf")
         pdf.output(temp_file)
         
         return send_file(temp_file, as_attachment=True)
+
     except Exception as e:
-        return f"Error generating PDF: {str(e)}"
+        # अगर फिर भी एरर आए तो स्क्रीन पर दिखेगा
+        return f"PDF Error Details: {str(e)}"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
