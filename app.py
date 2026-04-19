@@ -61,14 +61,12 @@ def download_pdf(disease):
             clean_text = str(p).encode('ascii', 'ignore').decode('ascii')
             
             pdf.set_font("Arial", 'B', 11)
-            
             pdf.cell(10, 8, txt="-", ln=0) 
             
-            # अब मुख्य टेक्स्ट लिखें
             pdf.set_font("Arial", size=11)
-            pdf.multi_cell(170, 8, txt=clean_text)
+             
+            pdf.multi_cell(0, 8, txt=clean_text, align='L')
             
-            # हर लाइन के बाद थोड़ा गैप दें ताकि अगला पॉइंट नीचे से शुरू हो
             pdf.ln(2)
 
         # --- PDF Output ---
