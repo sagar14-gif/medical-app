@@ -21,69 +21,70 @@ def index():
         if not result:
             result = "No matching disease found."
     return render_template('index.html', result=result, precautions=precautions)
- @app.route('/download_pdf/<disease>')
+@app.route('/download_pdf/<disease>')
 def download_pdf(disease):
     try:
-        # डेटा निकालें
         info = disease_data.get(disease, {"precautions": ["Consult a doctor."]})
         precautions = info.get('precautions', ["Consult a doctor."])
 
         pdf = FPDF()
         pdf.add_page()
         
-        # --- Blue Header ---
+        # --- Header Section ---
         pdf.set_fill_color(0, 51, 102) 
         pdf.rect(0, 0, 210, 40, 'F')
         pdf.set_text_color(255, 255, 255) 
         pdf.set_font("Arial", 'B', 24)
         pdf.cell(190, 20, txt="HEALTHCHECK AI", ln=True, align='C')
-        
         pdf.ln(25) 
 
-        # --- Diagnosis ---
+        # --- Report Body ---
         pdf.set_text_color(0, 0, 0) 
         pdf.set_font("Arial", 'B', 16)
-        pdf.cell(190, 10, txt="MEDICAL REPORT SUMMARY", ln=True, border='B')
-        pdf.ln(5)
+        pdf.cell(190, 10, txt="Medical Report Summary", ln=True)
         pdf.set_font("Arial", size=12)
-        # सुरक्षित टेक्स्ट क्लीनिंग
-        clean_disease = str(disease).encode('ascii', 'ignore').decode('ascii')
-        pdf.cell(190, 10, txt=f"Identified Condition: {clean_disease}", ln=True)
+        pdf.cell(190, 10, txt=f"Condition Identified: {disease}", ln=True)
         
         pdf.ln(10)
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(190, 10, txt="Recommended Precautions:", ln=True)
-        
-         # --- Precautions List ---
         pdf.set_font("Arial", 'B', 14)
         pdf.cell(190, 10, txt="Recommended Steps:", ln=True)
         pdf.ln(2)
 
+        # --- Precautions (Fixing the alignment) ---
         pdf.set_font("Arial", size=11)
         for p in precautions:
             # सुरक्षित टेक्स्ट क्लीनिंग
             clean_text = str(p).encode('ascii', 'ignore').decode('ascii')
             
-            # सुधार: हर पॉइंट के लिए कर्सर को वापस बाईं तरफ (X=10) पर सेट करें
-            current_y = pdf.get_y()
-            pdf.set_xy(10, current_y)
+            # सुधार: हर पॉइंट शुरू करने से पहले कर्सर को वापस बाईं (X=10) पर सेट करना
+            pdf.set_x(10)
             
-            # बुलेट पॉइंट लिखें
+            # बुलेट (-) के लिए एक छोटी सेल
             pdf.set_font("Arial", 'B', 11)
-            pdf.cell(5, 8, txt="-", ln=0) 
+            pdf.cell(10, 8, txt="-", ln=0) 
             
-            # मुख्य टेक्स्ट (w=0 मतलब पूरी लाइन का इस्तेमाल और ln=1 मतलब अगली लाइन पर जाना)
+            # मुख्य टेक्स्ट के लिए multi_cell (ln=1 यहाँ सबसे जरूरी है)
             pdf.set_font("Arial", size=11)
-            pdf.multi_cell(0, 8, txt=clean_text, align='L')
+            pdf.multi_cell(0, 8, txt=clean_text, align='L') 
             
-            # हर पॉइंट के बाद थोड़ा एक्स्ट्रा स्पेस
-            pdf.ln(1)
+            # एक छोटा गैप ताकि अगला पॉइंट एकदम सटकर न आए
+            pdf.ln(2)
 
-        # --- PDF Output ---
-        temp_file = os.path.join(tempfile.gettempdir(), "health_report.pdf")
-        pdf.output(temp_file)
+        # --- Footer ---
+        pdf.set_y(-30)
+        pdf.set_font("Arial", 'I', 8)
+        pdf.set_text_color(150, 150, 150)
+        pdf.cell(0, 10, txt="AI-Generated Report. Consult a doctor for professional advice.", align='C')
+
+        # सुरक्षित तरीके से फाइल सेव करना
+        temp_dir = tempfile.gettempdir()
+        file_path = os.path.join(temp_dir, "final_report.pdf")
+        pdf.output(file_path)
         
-        return send_file(temp_file, as_attachment=True)
+        return send_file(file_path, as_attachment=True)
+
+    except Exception as e:
+        return f"Error: {str(e)}"
 
     except Exception as e:
         # अगर फिर भी एरर आए तो स्क्रीन पर दिखेगा
