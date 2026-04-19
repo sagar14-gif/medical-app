@@ -54,20 +54,30 @@ def download_pdf(disease):
         pdf.set_font("Arial", 'B', 14)
         pdf.cell(190, 10, txt="Recommended Precautions:", ln=True)
         
-        # --- Precautions List ---
+         # --- Precautions List ---
+        pdf.set_font("Arial", 'B', 14)
+        pdf.cell(190, 10, txt="Recommended Steps:", ln=True)
+        pdf.ln(2)
+
         pdf.set_font("Arial", size=11)
         for p in precautions:
-            
+            # सुरक्षित टेक्स्ट क्लीनिंग
             clean_text = str(p).encode('ascii', 'ignore').decode('ascii')
             
-            pdf.set_font("Arial", 'B', 11)
-            pdf.cell(10, 8, txt="-", ln=0) 
+            # सुधार: हर पॉइंट के लिए कर्सर को वापस बाईं तरफ (X=10) पर सेट करें
+            current_y = pdf.get_y()
+            pdf.set_xy(10, current_y)
             
+            # बुलेट पॉइंट लिखें
+            pdf.set_font("Arial", 'B', 11)
+            pdf.cell(5, 8, txt="-", ln=0) 
+            
+            # मुख्य टेक्स्ट (w=0 मतलब पूरी लाइन का इस्तेमाल और ln=1 मतलब अगली लाइन पर जाना)
             pdf.set_font("Arial", size=11)
-             
             pdf.multi_cell(0, 8, txt=clean_text, align='L')
             
-            pdf.ln(2)
+            # हर पॉइंट के बाद थोड़ा एक्स्ट्रा स्पेस
+            pdf.ln(1)
 
         # --- PDF Output ---
         temp_file = os.path.join(tempfile.gettempdir(), "health_report.pdf")
