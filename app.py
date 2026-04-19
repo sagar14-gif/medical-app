@@ -24,64 +24,47 @@ def index():
 
 @app.route('/download_pdf/<disease>')
 def download_pdf(disease):
-    # बीमारी का डेटा निकालें
-    info = disease_data.get(disease, {})
-    precautions = info.get('precautions', ["Consult a doctor for detailed advice."])
+    try:
+        # डेटा सुरक्षित तरीके से निकालें
+        info = disease_data.get(disease, {"precautions": ["Consult a doctor for advice."]})
+        precautions = info.get('precautions', ["Consult a doctor for advice."])
 
-    pdf = FPDF()
-    pdf.add_page()
-    
-    # --- Blue Header Bar ---
-    pdf.set_fill_color(0, 51, 102) 
-    pdf.rect(0, 0, 210, 40, 'F')
-    
-    pdf.set_text_color(255, 255, 255) 
-    pdf.set_font("Arial", 'B', 24)
-    pdf.cell(190, 20, txt="HEALTHCHECK AI", ln=True, align='C')
-    pdf.set_font("Arial", size=12)
-    pdf.cell(190, 10, txt="Smart Symptom Analysis Report", ln=True, align='C')
-    
-    pdf.ln(20) 
+        pdf = FPDF()
+        pdf.add_page()
+        
+        # --- Header ---
+        pdf.set_fill_color(0, 51, 102) 
+        pdf.rect(0, 0, 210, 40, 'F')
+        pdf.set_text_color(255, 255, 255) 
+        pdf.set_font("Arial", 'B', 24)
+        pdf.cell(190, 20, txt="HEALTHCHECK AI", ln=True, align='C')
+        
+        pdf.ln(25) 
 
-    # --- Report Section ---
-    pdf.set_text_color(0, 0, 0) 
-    pdf.set_font("Arial", 'B', 16)
-    pdf.set_draw_color(0, 51, 102)
-    pdf.cell(190, 10, txt="Diagnosis Summary", ln=True, border='B')
-    
-    pdf.ln(5)
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(190, 10, txt=f"Detected Condition: {disease}", ln=True)
-    
-    pdf.ln(10)
+        # --- Content ---
+        pdf.set_text_color(0, 0, 0) 
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(190, 10, txt="Medical Report Summary", ln=True)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(190, 10, txt=f"Condition Identified: {disease}", ln=True)
+        
+        pdf.ln(10)
+        pdf.set_font("Arial", 'B', 14)
+        pdf.cell(190, 10, txt="Recommended Steps:", ln=True)
+        
+        pdf.set_font("Arial", size=11)
+        for p in precautions:
+            # बिना किसी स्पेशल करैक्टर के टेक्स्ट लिखें ताकि एरर न आए
+            text = str(p).encode('latin-1', 'replace').decode('latin-1')
+            pdf.multi_cell(180, 8, txt=f"- {text}")
 
-    # --- Precautions Section ---
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(190, 10, txt="Recommended Precautions", ln=True, border='B')
-    
-    pdf.ln(5)
-    pdf.set_font("Arial", size=11)
-    
-    # सावधानियों को बुलेट पॉइंट्स में जोड़ें
-    for p in precautions:
-        pdf.cell(10, 8, txt="*", ln=0)
-        pdf.multi_cell(180, 8, txt=p)
-        pdf.ln(2)
-
-    # --- Footer ---
-    pdf.set_y(-40)
-    pdf.set_font("Arial", 'I', 8)
-    pdf.set_text_color(128, 128, 128)
-    disclaimer = ("Disclaimer: This report is AI-generated and for informational purposes only. "
-                  "It is not a substitute for professional medical advice. Always consult a doctor.")
-    pdf.multi_cell(190, 5, txt=disclaimer, align='C')
-
-    # PDF को सुरक्षित जगह पर सेव करें
-    temp_dir = tempfile.gettempdir()
-    file_path = os.path.join(temp_dir, "Medical_Report.pdf")
-    pdf.output(file_path)
-    
-    return send_file(file_path, as_attachment=True)
+        # --- Save ---
+        temp_file = os.path.join(tempfile.gettempdir(), "health_report.pdf")
+        pdf.output(temp_file)
+        
+        return send_file(temp_file, as_attachment=True)
+    except Exception as e:
+        return f"Error generating PDF: {str(e)}"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
