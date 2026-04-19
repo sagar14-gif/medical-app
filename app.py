@@ -57,10 +57,19 @@ def download_pdf(disease):
         # --- Precautions List ---
         pdf.set_font("Arial", size=11)
         for p in precautions:
-            # यह लाइन किसी भी खराब अक्षर को हटा देगी (Force ASCII)
+            
             clean_text = str(p).encode('ascii', 'ignore').decode('ascii')
-            pdf.multi_cell(180, 8, txt=f"- {clean_text}")
-            pdf.ln(1)
+            
+            pdf.set_font("Arial", 'B', 11)
+            
+            pdf.cell(10, 8, txt="-", ln=0) 
+            
+            # अब मुख्य टेक्स्ट लिखें
+            pdf.set_font("Arial", size=11)
+            pdf.multi_cell(170, 8, txt=clean_text)
+            
+            # हर लाइन के बाद थोड़ा गैप दें ताकि अगला पॉइंट नीचे से शुरू हो
+            pdf.ln(2)
 
         # --- PDF Output ---
         temp_file = os.path.join(tempfile.gettempdir(), "health_report.pdf")
