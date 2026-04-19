@@ -24,21 +24,60 @@ def index():
 
 @app.route('/download_pdf/<disease>')
 def download_pdf(disease):
+    info = disease_data.get(disease, {})
+    precautions = info.get('precautions', ["Consult a doctor for detailed advice."])
+
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, txt="Health Report", ln=True, align='C')
     
+    # --- Blue Header Bar ---
+    pdf.set_fill_color(0, 51, 102) 
+    pdf.rect(0, 0, 210, 40, 'F')
+    
+    pdf.set_text_color(255, 255, 255) 
+    pdf.set_font("Arial", 'B', 24)
+    pdf.cell(190, 20, txt="HEALTHCHECK AI", ln=True, align='C')
     pdf.set_font("Arial", size=12)
-    pdf.ln(10)
-    pdf.cell(200, 10, txt=f"Condition: {disease}", ln=True)
+    pdf.cell(190, 10, txt="Smart Symptom Analysis Report", ln=True, align='C')
     
-    # PDF सेव करने का तरीका (Windows और Render दोनों के लिए)
+    pdf.ln(20) 
+
+    # --- Report Section ---
+    pdf.set_text_color(0, 0, 0) 
+    pdf.set_font("Arial", 'B', 16)
+    pdf.set_draw_color(0, 51, 102)
+    pdf.cell(190, 10, txt="Diagnosis Summary", ln=True, border='B')
+    
+    pdf.ln(5)
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(190, 10, txt=f"Detected Condition: {disease}", ln=True)
+    
+    pdf.ln(10)
+
+    # --- Precautions Section ---
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(190, 10, txt="Recommended Precautions", ln=True, border='B')
+    
+    pdf.ln(5)
+    pdf.set_font("Arial", size=12)
+    
+    for p in precautions:
+        pdf.cell(10, 10, txt=">", ln=False)
+        pdf.multi_cell(180, 10, txt=p)
+        pdf.ln(2)
+
+    # --- Footer / Disclaimer ---
+    pdf.set_y(-50) 
+    pdf.set_font("Arial", 'I', 10)
+    pdf.set_text_color(150, 150, 150)
+    pdf.multi_cell(190, 5, txt="Disclaimer: This is an AI-generated report for informational purposes only. "
+                               "It is not a substitute for professional medical advice, diagnosis, or treatment. "
+                               "Always seek the advice of your physician.", align='C')
+
     temp_dir = tempfile.gettempdir()
-    file_path = os.path.join(temp_dir, "report.pdf")
+    file_path = os.path.join(temp_dir, "professional_report.pdf")
     pdf.output(file_path)
     return send_file(file_path, as_attachment=True)
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
