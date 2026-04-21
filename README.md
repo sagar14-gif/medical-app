@@ -43,8 +43,7 @@ Version Control: Git & GitHub
 Deployment: Render
 
 
-
-📂 Project Structure
+ 📂 Project Structure
 To ensure the app runs correctly, the files are organized as follows:
 
 Plaintext
@@ -54,7 +53,6 @@ Plaintext
 ├── Procfile               # Deployment instructions for Render
 └── templates/             # Folder for HTML templates
     └── index.html         # The main user interface
-
 
 
     ⚙️ Installation & Setup
